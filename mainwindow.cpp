@@ -62,6 +62,10 @@ void MainWindow::on_okButton_clicked(){
     fields.append("7ec.623204.24");
     names.append("iBatHV");
   }
+  if(ui->batSocCB->isChecked()){
+    fields.append("7ec.622002.24");
+    names.append("batSOC");
+  }
   if(ui->eleTorqueCB->isChecked()){
     fields.append("1f8.28");
     names.append("eleBrakeTorque");
@@ -69,6 +73,10 @@ void MainWindow::on_okButton_clicked(){
   if(ui->eleTorqueCB->isChecked()){
     fields.append("18a.27");
     names.append("Coasting Torque");
+  }
+  if(ui->mainsPowCB->isChecked()){
+    fields.append("793.62504a.24");
+    names.append("pMains");
   }
 
   // Each field must give rise to a different ADF file:
@@ -198,8 +206,10 @@ void MainWindow::on_coastTorqueCB_clicked(){
 
 
 void MainWindow::updateClickedState(){
-  if(ui->batCurrCB->isChecked()||ui->batVoltCB->isChecked()||
-    ui->eleTorqueCB->isChecked()||ui->coastTorqueCB->isChecked() ){
+  if(ui->batCurrCB->isChecked()||ui->batVoltCB->isChecked()||ui->batSocCB->isChecked()||
+    ui->eleTorqueCB->isChecked()||ui->coastTorqueCB->isChecked()||
+                                                         ui->mainsPowCB->isChecked()
+          ){
     ui->okButton->setEnabled(true);
     ui->okLabel->setEnabled(true);
   }else{
