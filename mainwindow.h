@@ -34,7 +34,7 @@ private:
     QTextStream outStreams;
     //pari a quelli di input -2 in quanto gli ultimi 2 non li riporto
     Ui::MainWindow *ui;
-    QByteArray processLine(QByteArray line_);
+    QByteArray processLine(QByteArray line_, double iniSecs_);
     void updateClickedState();
 
 };

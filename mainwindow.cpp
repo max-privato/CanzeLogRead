@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
   setAcceptDrops(true);
   ui->label_4->setText("");
   initialLabel3Text=ui->okLabel->text();
+  updateClickedState();
 }
 
 MainWindow::~MainWindow() {
@@ -96,7 +97,6 @@ void MainWindow::on_okButton_clicked(){
     outStreams[i].setDevice(&outFiles[i]);
   }
 
- // ora devo passare più volte il file per cercare i valori delle varie grandezze selezionate. Pertanto prima lo acquisisco tutto in memoriaper ogni item in fields leggo le righe e le riscrivo
 
   //Bypassing header line:
   line = inFile.readLine();
@@ -104,28 +104,49 @@ void MainWindow::on_okButton_clicked(){
   while (!inFile.atEnd()) {
     inLines.append(inFile.readLine());
   }
-  int iii=0;
+
+  //Creating output Header1 taking date-time info from the first line:
+  QByteArray header1;
+  header1=" //"+inLines[0].mid(0,4)+"-"+inLines[0].mid(4,2)+"-"+inLines[0].mid(6,2) +
+             "; "+inLines[0].mid(8,2)+":"+inLines[0].mid(10,2);
+
+  //Determining seconds corresponding to intial time to be substracted to all outputed seconds:
+  double iniSecs;
+  QByteArray hh=inLines[0].mid(8,2), mm=inLines[0].mid(10,2), ss=inLines[0].mid(12,5);
+  ss.insert(2,".");
+  //Compute seconds:
+  iniSecs=ss.toDouble();
+  //add minutes:
+  iniSecs+=60.*mm.toDouble();
+  //add hours:
+  iniSecs+=3600.*hh.toDouble();
+
   int fieldNum=0,sampleCount=0;
+  //Writing header lines
+  for (int i=0; i<names.count(); i++){
+    outStreams[i]<<header1<<"\n";
+    outStreams[i]<<"t\t"<<names[i]<<"\n";
+  }
   foreach (QByteArray field,fields){
     sampleCount=0;
     foreach(QByteArray line1,inLines){
       if(line1.contains(field)){
-        QString outLine=processLine(line1);
+        QString outLine=processLine(line1,iniSecs);
         outStreams[fieldNum]<<outLine<<"\n";
         sampleCount++;
       }
     }
     fieldNum++;
   }
-  iii++;
   for(int i=0; i<names.count(); i++){
     outFiles[i].close();
   }
+  ui->okLabel->setText("Output files correctly created! ");
   delete[] outFiles;
   delete[] outStreams;
 }
 
-QByteArray MainWindow::processLine(QByteArray line_){
+QByteArray MainWindow::processLine(QByteArray line_, double iniSecs_){
   /* Questa funzione analizza la riga in ingresso, letta dall'output dello Yokogawa
    * e determina la stringa contenente la corrispondente riga da scrivere poi sul file
    * di uscita.
@@ -143,6 +164,8 @@ QByteArray MainWindow::processLine(QByteArray line_){
   timeS+=60.*mm.toDouble();
   //add hours:
   timeS+=3600.*hh.toDouble();
+
+  timeS-=iniSecs_;
   // find value:
   int valueEndPos=line_.lastIndexOf(',');
   // Eliminate comma to allow next serch:
@@ -152,7 +175,7 @@ QByteArray MainWindow::processLine(QByteArray line_){
   sValue=line_.mid(valueStartPos,valueEndPos-valueStartPos);
 
   ret.setNum(timeS);
-  ret+=",";
+  ret+="\t";
   ret+=sValue;
   return ret;
 }
