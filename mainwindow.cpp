@@ -13,18 +13,48 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
     ui(new Ui::MainWindow) {
   ui->setupUi(this);
   move(90,0);
-  setAcceptDrops(true);
-  ui->label_4->setText("");
   initialLabel3Text=ui->okLabel->text();
-  updateClickedState();
+  setAcceptDrops(true);
+
+  //Prepare qstringlist to be inserted into tree.codeNameTable
+  treeCodes.append("7ec.623203.24"); treeNames.append("vBatHV");
+  treeCodes.append("7ec.623204.24"); treeNames.append("iBatHV");
+  treeCodes.append("7ec.622002.24"); treeNames.append("batSOC");
+  treeCodes.append("18a.27"); treeNames.append("Coasting Torque");
+  treeCodes.append("1f8.28"); treeNames.append("eleBrakeTorque1");     //ElecBrakeWheelsTorqueApplied:
+  treeCodes.append("1f8.16"); treeNames.append("eleBrakeTorque2");    //TotalPotentialResistiveWheelsTorque;
+  treeCodes.append("793.62504a.24"); treeNames.append("pMains");
+  treeCodes.append("5d7.0"); treeNames.append("vhSpeed");
+
+
+  // Prepare listTree:
+  ui->treeWidget->setColumnCount(2);
+  QStringList HeaderLabels;
+  HeaderLabels.append("code");
+  HeaderLabels.append("out varName");
+  ui->treeWidget->setHeaderLabels(HeaderLabels);
+  ui->treeWidget->setAlternatingRowColors(true);
+  QStringList list;
+  for(int  i=0; i<treeCodes.count(); i++){
+    list.append(treeCodes[i]);
+    list.append(treeNames[i]);
+    QTreeWidgetItem treeItem;
+
+    treeItems.append(new QTreeWidgetItem((QTreeWidget*)0,list));
+    treeItems[treeItems.count()-1]->setCheckState(0,Qt::Checked);
+    list.clear();
+  }
+
+   ui->treeWidget->insertTopLevelItems(0, treeItems);
+   ui->treeWidget->resizeColumnToContents(0);
+   ui->treeWidget->resizeColumnToContents(1);
 }
 
 MainWindow::~MainWindow() {
   delete ui;
 }
 
-void MainWindow::dragEnterEvent(QDragEnterEvent *event)
-{
+void MainWindow::dragEnterEvent(QDragEnterEvent *event){
   event->acceptProposedAction();//mette il puntatore in posizione di accettazione
                                 // puts the pointer in the accept position
 }
@@ -39,11 +69,12 @@ void MainWindow::dropEvent(QDropEvent *event)
   inFileName.remove(0,1);
   ui->label_4->setText(inFileName);
   ui->okLabel->setText(initialLabel3Text);
+  ui->okLabel->setEnabled(true);
+  ui->okButton->setEnabled(true);
 }
 
 void MainWindow::on_okButton_clicked(){
-  QList <QByteArray> fields, names;
-  QList <QByteArray> inLines, outLines; //stringhe contenenti le righe del file di ingresso e di uscita
+  QStringList  inLines, outLines; //stringhe contenenti le righe del file di ingresso e di uscita
   QFile inFile(inFileName);
   QByteArray line;
   lineCount=0;
@@ -53,46 +84,12 @@ void MainWindow::on_okButton_clicked(){
      return;
   }
 
-  //Set the fields to be searched:
-  if(ui->batVoltCB->isChecked()){
-    fields.append("7ec.623203.24");
-    names.append("vBatHV");
-  }
-  if(ui->batCurrCB->isChecked()){
-    fields.append("7ec.623204.24");
-    names.append("iBatHV");
-  }
-  if(ui->batSocCB->isChecked()){
-    fields.append("7ec.622002.24");
-    names.append("batSOC");
-  }
-  if(ui->coastTorqueCB->isChecked()){
-    fields.append("18a.27");
-    names.append("Coasting Torque");
-  }
-  if(ui->eleBrakeTorque1CB->isChecked()){  //ElecBrakeWheelsTorqueApplied
-    fields.append("1f8.28");
-    names.append("eleBrakeTorque1");
-  }
-  if(ui->eleBrakeTorque2CB->isChecked()){ //TotalPotentialResistiveWheelsTorque
-    fields.append("1f8.16");
-    names.append("eleBrakeTorque1");
-  }
-  if(ui->mainsPowCB->isChecked()){
-    fields.append("793.62504a.24");
-    names.append("pMains");
-  }
-  if(ui->vhSpeedCB->isChecked()){
-    fields.append("5d7.0");
-    names.append("vhSpeed");
-  }
-
   // Each field must give rise to a different ADF file:
-  outFiles=new QFile[names.count()];
+  outFiles=new QFile[treeNames.count()];
   QStringList outFileNames;
 
   QStringList shortOutFNames;
-  foreach(QString varName, names){
+  foreach(QString varName, treeNames){
     QString fileName=inFileName;
     fileName.chop(4);
     fileName=fileName+"_"+varName+".ADF";
@@ -103,9 +100,13 @@ void MainWindow::on_okButton_clicked(){
   }
 
   QTextStream * outStreams;
-  outStreams=new QTextStream[names.count()];
-  for(int i=0; i<names.count(); i++){
-    outFiles[i].setFileName(outFileNames[i]);
+  outStreams=new QTextStream[treeNames.count()];
+
+
+  for(int i=0; i<treeNames.count(); i++){
+    if(!treeItems[i]->checkState(0))
+       continue;
+      outFiles[i].setFileName(outFileNames[i]);
     if(!outFiles[i].open(QIODevice::WriteOnly | QIODevice::Text)){
       ui->okLabel->setText("Unable to open file "+shortOutFNames[i]+" for writing!");
       return;
@@ -122,13 +123,13 @@ void MainWindow::on_okButton_clicked(){
   }
 
   //Creating output Header1 taking date-time info from the first line:
-  QByteArray header1;
+  QString header1;
   header1=" //"+inLines[0].mid(0,4)+"-"+inLines[0].mid(4,2)+"-"+inLines[0].mid(6,2) +
              "; "+inLines[0].mid(8,2)+":"+inLines[0].mid(10,2);
 
   //Determining seconds corresponding to intial time to be substracted to all outputed seconds:
   double iniSecs;
-  QByteArray hh=inLines[0].mid(8,2), mm=inLines[0].mid(10,2), ss=inLines[0].mid(12,5);
+  QString hh=inLines[0].mid(8,2), mm=inLines[0].mid(10,2), ss=inLines[0].mid(12,5);
   ss.insert(2,".");
   //Compute seconds:
   iniSecs=ss.toDouble();
@@ -139,14 +140,15 @@ void MainWindow::on_okButton_clicked(){
 
   int fieldNum=0,sampleCount=0;
   //Writing header lines
-  for (int i=0; i<names.count(); i++){
+  for (int i=0; i<treeNames.count(); i++){
     outStreams[i]<<header1<<"\n";
-    outStreams[i]<<"t\t"<<names[i]<<"\n";
+    outStreams[i]<<"t\t"<<treeNames[i]<<"\n";
   }
-  foreach (QByteArray field,fields){
+
+  foreach (QString code,treeCodes){
     sampleCount=0;
-    foreach(QByteArray line1,inLines){
-      if(line1.contains(field)){
+    foreach(QString line1,inLines){
+      if(line1.contains(code)){
         QString outLine=processLine(line1,iniSecs);
         outStreams[fieldNum]<<outLine<<"\n";
         sampleCount++;
@@ -154,7 +156,7 @@ void MainWindow::on_okButton_clicked(){
     }
     fieldNum++;
   }
-  for(int i=0; i<names.count(); i++){
+  for(int i=0; i<treeNames.count(); i++){
     outFiles[i].close();
   }
   ui->okLabel->setText("Output files correctly created! ");
@@ -162,7 +164,7 @@ void MainWindow::on_okButton_clicked(){
   delete[] outStreams;
 }
 
-QByteArray MainWindow::processLine(QByteArray line_, double iniSecs_){
+QString MainWindow::processLine(QString line_, double iniSecs_){
   /* Questa funzione analizza la riga in ingresso, letta dall'output dello Yokogawa
    * e determina la stringa contenente la corrispondente riga da scrivere poi sul file
    * di uscita.
@@ -170,9 +172,9 @@ QByteArray MainWindow::processLine(QByteArray line_, double iniSecs_){
    * Per il timestamp mantengo solo i secondi (fino ai ms);  la data la metto solo
    * nell'intestazione del file
   */
-  QByteArray strSec, strVal, ret="";
+  QString strSec, strVal, ret="";
   // per prima cosa prendo la stringa che contiene l'orario fino ai secondi, con tre dcimali:
-  QByteArray hh=line_.mid(8,2), mm=line_.mid(10,2), ss=line_.mid(12,5), sValue;
+  QString hh=line_.mid(8,2), mm=line_.mid(10,2), ss=line_.mid(12,5), sValue;
   ss.insert(2,".");
   //Compute seconds:
   double timeS=ss.toDouble();
@@ -196,47 +198,14 @@ QByteArray MainWindow::processLine(QByteArray line_, double iniSecs_){
   return ret;
 }
 
-void MainWindow::on_batCurrCB_clicked(){
-  updateClickedState();
+
+
+void MainWindow::on_selectBtn_clicked() {
+  for(int i=0; i<treeNames.count(); i++)
+    treeItems[i]->setCheckState(0,Qt::Checked);
 }
 
-void MainWindow::on_batVoltCB_clicked(){
-    updateClickedState();
+void MainWindow::on_unselectBtn_clicked() {
+    for(int i=0; i<treeNames.count(); i++)
+      treeItems[i]->setCheckState(0,Qt::Unchecked);
 }
-
-void MainWindow::on_eleBrakeTorque1CB_clicked(){
-    updateClickedState();
-}
-
-void MainWindow::on_eleBrakeTorque2CB_clicked(){
-    updateClickedState();
-}
-
-void MainWindow::on_coastTorqueCB_clicked(){
-    updateClickedState();
-}
-void MainWindow::on_vhSpeedCB_clicked(){
-    updateClickedState();
-}
-void MainWindow::on_batSocCB_clicked(){
-    updateClickedState();
-}
-
-
-void MainWindow::updateClickedState(){
-  if(ui->batCurrCB->isChecked()||ui->batVoltCB->isChecked()||ui->batSocCB->isChecked()||
-    ui->eleBrakeTorque1CB->isChecked()||ui->coastTorqueCB->isChecked()||
-    ui->eleBrakeTorque2CB->isChecked()||ui->mainsPowCB->isChecked()||
-          ui->vhSpeedCB->isChecked()                                      ){
-    ui->okButton->setEnabled(true);
-    ui->okLabel->setEnabled(true);
-  }else{
-    ui->okButton->setEnabled(false);
-    ui->okLabel->setEnabled(false );
-  }
-}
-
-
-
-
-

@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QDropEvent>
 #include <QTextStream>
+#include <QTreeWidgetItem>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -21,26 +22,23 @@ public:
 
 private slots:
     void on_okButton_clicked();
-    void on_batCurrCB_clicked();
-    void on_batVoltCB_clicked();
-    void on_eleBrakeTorque1CB_clicked();
-    void on_coastTorqueCB_clicked();
 
-    void on_vhSpeedCB_clicked();
+    void on_selectBtn_clicked();
 
-    void on_batSocCB_clicked();
-
-    void on_eleBrakeTorque2CB_clicked();
+    void on_unselectBtn_clicked();
 
 private:
     int items,// numero di campi che scriverò nel file di uscita:
     lineCount;
+    QStringList treeCodes, treeNames;
     QString inFileName,  initialLabel3Text;
     QFile * outFiles;
+    QList<QTreeWidgetItem *> treeItems;
+
     QTextStream outStreams;
     //pari a quelli di input -2 in quanto gli ultimi 2 non li riporto
     Ui::MainWindow *ui;
-    QByteArray processLine(QByteArray line_, double iniSecs_);
+    QString processLine(QString line_, double iniSecs_);
     void updateClickedState();
 
 };
