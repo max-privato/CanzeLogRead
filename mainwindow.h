@@ -23,8 +23,14 @@ private slots:
     void on_okButton_clicked();
     void on_batCurrCB_clicked();
     void on_batVoltCB_clicked();
-    void on_eleTorqueCB_clicked();
+    void on_eleBrakeTorque1CB_clicked();
     void on_coastTorqueCB_clicked();
+
+    void on_vhSpeedCB_clicked();
+
+    void on_batSocCB_clicked();
+
+    void on_eleBrakeTorque2CB_clicked();
 
 private:
     int items,// numero di campi che scriverò nel file di uscita:
