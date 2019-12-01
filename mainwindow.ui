@@ -94,7 +94,17 @@ Splitted files will have &quot;ADF&quot; extension</string>
      <widget class="QTreeWidget" name="treeWidget">
       <column>
        <property name="text">
-        <string>Available codes                   </string>
+        <string>Available codes              </string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>output file Name</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>log file Name</string>
        </property>
       </column>
      </widget>
