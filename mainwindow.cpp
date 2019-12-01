@@ -18,15 +18,42 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
 
   //Prepare QStringlist to be inserted into tree.codeNameTable
 
+  // ********** longNames impelementation has just started.
+  // ********** by far they do nothingare started to
+
   // Battery-related quantities (excluding individual cells)
-  availableCodes.append("7ec.623203.24"); availableNames.append("vBatHV");
-  availableCodes.append("7ec.623204.24"); availableNames.append("iBatHV");
-  availableCodes.append("7ec.622002.24"); availableNames.append("batSOC");
-  availableCodes.append("658.33"); availableNames.append("batSOE");
-  availableCodes.append("7bb.6103.192"); availableNames.append("batSOCreal");
-  availableCodes.append("e.44"); availableNames.append("batTemp");
-  availableCodes.append("7bb.6161.96"); availableNames.append("batTot_kms");
-  availableCodes.append("7bb.6161.120"); availableNames.append("batTot_kWh");
+  availableCodes.append("7ec.623203.24");
+  availableNames.append("vBatHV");
+  longNames.append("HV LBC voltage measure");
+
+  availableCodes.append("7ec.623204.24");
+  availableNames.append("iBatHV");
+  longNames.append("HV LBC current measure");
+
+  availableCodes.append("7ec.622002.24");
+  availableNames.append("batSOC");
+  longNames.append("HV Battery voltage");
+
+  availableCodes.append("658.33");
+  availableNames.append("batSOE");
+  longNames.append("HV Battery voltage");
+
+  availableCodes.append("7bb.6103.192");
+  availableNames.append("batSOCreal");
+  longNames.append("HV Battery voltage");
+
+  availableCodes.append("e.44");
+  availableNames.append("batTemp");
+  longNames.append("HV Battery voltage");
+
+  availableCodes.append("7bb.6161.96");
+  availableNames.append("batTot_kms");
+  longNames.append("HV Battery voltage");
+
+  availableCodes.append("7bb.6161.120");
+  longNames.append("HV Battery voltage");
+  availableNames.append("batTot_kWh");
+
 
   // Propulsion related quantities:
   availableCodes.append("18a.27"); availableNames.append("coastingTorque");
@@ -199,6 +226,8 @@ void MainWindow::on_okButton_clicked(){
     shortOutFNames.append(shortName);
   }
 
+  //*** the size of shortOutFNames and outFileNames MUST be equal to checkedFiles!!
+
   QTextStream * outStreams;
   outStreams=new QTextStream[checkedFiles];
 
@@ -216,7 +245,7 @@ void MainWindow::on_okButton_clicked(){
     currentField++;
   }
 
-  //***Here actualFile MUST be equal to checkedFiles!!
+  //***Here currentFiels MUST be equal to checkedFiles!!
 
 
   //Bypassing header line:
@@ -249,19 +278,20 @@ void MainWindow::on_okButton_clicked(){
   for (int i=0; i<treeItems.count(); i++){
     if(treeItems[i]->checkState(0)){
       outStreams[currentField]<<header1<<"\n";
-      outStreams[currentField]<<"t\t"<<treeItems[currentField]->text(1)<<"\n";
+      outStreams[currentField]<<"t\t"<<treeItems[i]->text(1)<<"\n";
       currentField++;
     }
   }
 
   currentField=0;
   for (int i=0; i<treeItems.count(); i++){
-    QString str= treeItems[i]->text(0);
+      // Must add the two commas because othersswise I could search a subcode of a code that is a superset of what I'm seraching.
+    QString searchStr= ","+treeItems[i]->text(0)+",";
     if(!treeItems[i]->checkState(0))
        continue;
     sampleCount=0;
     foreach(QString line1,inLines){
-      if(line1.contains(treeItems[i]->text(0))){
+      if(line1.contains(searchStr)){
         QString outLine=processLine(line1,iniSecs);
         outStreams[currentField]<<outLine<<"\n";
         sampleCount++;
