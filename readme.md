@@ -12,3 +12,6 @@ Individual files are needed because each CanZE output sample carries a timestamp
 Usage of the program is straightforward: just drop the file to be processed, select the variables to be put on individual files and click ok. the output files will be put in the same folder cntaining the input file.
 
 CanzeRead is written in Qt. Because of this, even though it is currently compiled only for Windows, porting to other OS's should be straightforward.
+
+CODES
+Canze manages many codes. CanzeRead has so far implemented only a subset of them, implemented  in the code of MainWindow::MainWindow. following that pattern one can easily had more codes: just add nmore availableCodes - availableNames pairs (longNames are not relevant and can be omitted). The rest of the program will adapt automatically.
