@@ -20,14 +20,47 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
   treeCodes.append("7ec.623203.24"); treeNames.append("vBatHV");
   treeCodes.append("7ec.623204.24"); treeNames.append("iBatHV");
   treeCodes.append("7ec.622002.24"); treeNames.append("batSOC");
+  treeCodes.append("7bb.6103.192"); treeNames.append("batSOCreal");
   treeCodes.append("18a.27"); treeNames.append("Coasting Torque");
   treeCodes.append("1f8.28"); treeNames.append("eleBrakeTorque1");     //ElecBrakeWheelsTorqueApplied:
   treeCodes.append("1f8.16"); treeNames.append("eleBrakeTorque2");    //TotalPotentialResistiveWheelsTorque;
   treeCodes.append("793.62504a.24"); treeNames.append("pMains");
   treeCodes.append("5d7.0"); treeNames.append("vhSpeed");
+  // I codici per le tensioni di celle sono molti e li stabilisco programmaticamente:
+  for (int i=16; i<993; i+=16){
+     QString iStr, codeStr, nameStr;
+     iStr.setNum(i);
+     codeStr="7bb.6141."+iStr;
+     int cell=i/16;
+     if(cell<10){
+       iStr.setNum(cell);
+       iStr="0"+iStr;
+     }  else
+       iStr.setNum(cell);
+     nameStr="vCell"+iStr;
+     treeCodes.append(codeStr); treeNames.append(nameStr);
+  }
+  treeCodes.append("42e.20"); treeNames.append("fanSpeed");
+  treeCodes.append("42e.38"); treeNames.append("iPilotCharge");
+  treeCodes.append("e.44"); treeNames.append("batTemp");
+  treeCodes.append("e.56"); treeNames.append("pCharge_kW");
+  // I codici per le temperature di celle sono molti e li stabilisco programmaticamente:
+  for (int i=32; i<997; i+=24){
+     QString iStr, codeStr, nameStr;
+     iStr.setNum(i);
+     codeStr="7bb.6104."+iStr;
+     int cell=i/24;
+     if(cell<10){
+       iStr.setNum(cell);
+       iStr="0"+iStr;
+     }  else
+       iStr.setNum(cell);
+     nameStr="tempCell"+iStr;
+     treeCodes.append(codeStr); treeNames.append(nameStr);
+  }
+
 
   /*
-
   // Prepare listTree:
   ui->treeWidget->setColumnCount(2);
   QStringList HeaderLabels;
@@ -45,7 +78,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
     treeItems[treeItems.count()-1]->setCheckState(0,Qt::Checked);
     list.clear();
   }
-
    ui->treeWidget->insertTopLevelItems(0, treeItems);
    ui->treeWidget->resizeColumnToContents(0);
    ui->treeWidget->resizeColumnToContents(1);
