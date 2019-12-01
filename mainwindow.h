@@ -22,18 +22,15 @@ public:
 
 private slots:
     void on_okButton_clicked();
-
     void on_selectBtn_clicked();
-
     void on_unselectBtn_clicked();
 
 private:
-    int items,// numero di campi che scriverò nel file di uscita:
-    lineCount;
-    QStringList treeCodes, treeNames;
+    int lineCount;
+    QStringList availableCodes, availableNames;
     QString inFileName,  initialLabel3Text;
-    QFile * outFiles;
     QList<QTreeWidgetItem *> treeItems;
+    QStringList treeItemsCol0, treeItemsCol1;  //per debug: non si riescono al eggere nel debugger i testi delle treeItems.
 
     QTextStream outStreams;
     //pari a quelli di input -2 in quanto gli ultimi 2 non li riporto

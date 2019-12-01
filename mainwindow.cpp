@@ -16,17 +16,44 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
   initialLabel3Text=ui->okLabel->text();
   setAcceptDrops(true);
 
-  //Prepare qstringlist to be inserted into tree.codeNameTable
-  treeCodes.append("7ec.623203.24"); treeNames.append("vBatHV");
-  treeCodes.append("7ec.623204.24"); treeNames.append("iBatHV");
-  treeCodes.append("7ec.622002.24"); treeNames.append("batSOC");
-  treeCodes.append("7bb.6103.192"); treeNames.append("batSOCreal");
-  treeCodes.append("18a.27"); treeNames.append("Coasting Torque");
-  treeCodes.append("1f8.28"); treeNames.append("eleBrakeTorque1");     //ElecBrakeWheelsTorqueApplied:
-  treeCodes.append("1f8.16"); treeNames.append("eleBrakeTorque2");    //TotalPotentialResistiveWheelsTorque;
-  treeCodes.append("793.62504a.24"); treeNames.append("pMains");
-  treeCodes.append("5d7.0"); treeNames.append("vhSpeed");
-  // I codici per le tensioni di celle sono molti e li stabilisco programmaticamente:
+  //Prepare QStringlist to be inserted into tree.codeNameTable
+
+  // Battery-related quantities (excluding individual cells)
+  availableCodes.append("7ec.623203.24"); availableNames.append("vBatHV");
+  availableCodes.append("7ec.623204.24"); availableNames.append("iBatHV");
+  availableCodes.append("7ec.622002.24"); availableNames.append("batSOC");
+  availableCodes.append("658.33"); availableNames.append("batSOE");
+  availableCodes.append("7bb.6103.192"); availableNames.append("batSOCreal");
+  availableCodes.append("e.44"); availableNames.append("batTemp");
+  availableCodes.append("7bb.6161.96"); availableNames.append("batTot_kms");
+  availableCodes.append("7bb.6161.120"); availableNames.append("batTot_kWh");
+
+  // Propulsion related quantities:
+  availableCodes.append("18a.27"); availableNames.append("coastingTorque");
+  availableCodes.append("1f8.28"); availableNames.append("eleBrakeTorque1");     //ElecBrakeWheelsTorqueApplied:
+  availableCodes.append("1f8.16"); availableNames.append("eleBrakeTorque2");    //TotalPotentialResistiveWheelsTorque;
+  availableCodes.append("5d7.0"); availableNames.append("vhSpeed");
+
+  // Mains and charging related quantities:
+  availableCodes.append("e.56"); availableNames.append("pCharge_kW");
+  availableCodes.append("793.625062.24"); availableNames.append("groundResis");
+  availableCodes.append("793.62502c.24"); availableNames.append("vMains1");
+  availableCodes.append("793.62502d.24"); availableNames.append("vMains2");
+  availableCodes.append("793.62502e.24"); availableNames.append("vMains3");
+  availableCodes.append("793.62503f.24"); availableNames.append("vMains12");
+  availableCodes.append("793.625041.24"); availableNames.append("vMains23");
+  availableCodes.append("793.625042.24"); availableNames.append("vMains31");
+  availableCodes.append("793.622001.24"); availableNames.append("iMains1");
+  availableCodes.append("793.62503a.24"); availableNames.append("iMains2");
+  availableCodes.append("793.62503b.24"); availableNames.append("iMains3");
+  availableCodes.append("793.62504a.24"); availableNames.append("pMains");
+
+// Miscellaneous:
+  availableCodes.append("42e.20"); availableNames.append("fanSpeed");
+  availableCodes.append("42e.38"); availableNames.append("iPilotCharge");
+  availableCodes.append("7ec.622005.24"); availableNames.append("vBat12V");
+
+  // Cell voltage codes:
   for (int i=16; i<993; i+=16){
      QString iStr, codeStr, nameStr;
      iStr.setNum(i);
@@ -38,13 +65,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
      }  else
        iStr.setNum(cell);
      nameStr="vCell"+iStr;
-     treeCodes.append(codeStr); treeNames.append(nameStr);
+     availableCodes.append(codeStr);
+     availableNames.append(nameStr);
   }
-  treeCodes.append("42e.20"); treeNames.append("fanSpeed");
-  treeCodes.append("42e.38"); treeNames.append("iPilotCharge");
-  treeCodes.append("e.44"); treeNames.append("batTemp");
-  treeCodes.append("e.56"); treeNames.append("pCharge_kW");
-  // I codici per le temperature di celle sono molti e li stabilisco programmaticamente:
+  // Cel temperature codes::
   for (int i=32; i<997; i+=24){
      QString iStr, codeStr, nameStr;
      iStr.setNum(i);
@@ -56,32 +80,25 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
      }  else
        iStr.setNum(cell);
      nameStr="tempCell"+iStr;
-     treeCodes.append(codeStr); treeNames.append(nameStr);
+     availableCodes.append(codeStr);
+     availableNames.append(nameStr);
+  }
+  // cell Balancing Switches::
+  for (int i=16; i<105; i+=8){
+     QString iStr, codeStr, nameStr;
+     iStr.setNum(i);
+     codeStr="7bb.6107."+iStr;
+     int cell=i/8-1;
+     if(cell<10){
+       iStr.setNum(cell);
+       iStr="0"+iStr;
+     }  else
+       iStr.setNum(cell);
+     nameStr="balanceSwitch"+iStr;
+     availableCodes.append(codeStr);
+     availableNames.append(nameStr);
   }
 
-
-  /*
-  // Prepare listTree:
-  ui->treeWidget->setColumnCount(2);
-  QStringList HeaderLabels;
-  HeaderLabels.append("code");
-  HeaderLabels.append("out varName");
-  ui->treeWidget->setHeaderLabels(HeaderLabels);
-  ui->treeWidget->setAlternatingRowColors(true);
-  QStringList list;
-  for(int  i=0; i<treeCodes.count(); i++){
-    list.append(treeCodes[i]);
-    list.append(treeNames[i]);
-    QTreeWidgetItem treeItem;
-
-    treeItems.append(new QTreeWidgetItem((QTreeWidget*)0,list));
-    treeItems[treeItems.count()-1]->setCheckState(0,Qt::Checked);
-    list.clear();
-  }
-   ui->treeWidget->insertTopLevelItems(0, treeItems);
-   ui->treeWidget->resizeColumnToContents(0);
-   ui->treeWidget->resizeColumnToContents(1);
-   */
 }
 
 MainWindow::~MainWindow() {
@@ -106,14 +123,14 @@ void MainWindow::dropEvent(QDropEvent *event)
   ui->okLabel->setEnabled(true);
   ui->okButton->setEnabled(true);
 
-  // Ora procedo con l'individuazione dei codici presenti nel file
+  // Opening input file:
   QStringList inLines;
   QFile inFile(inFileName);
   if (!inFile.open(QIODevice::ReadOnly | QIODevice::Text)){
      ui->okLabel->setText("Unable to open file for reading!");
      return;
   }
-   //per ragioni di efficienza mi limito a ricercare i codici nelle sole prime 1000 righe. Ridengo praticamente impossibile che oltre le prime 1000 righe visi posano trovare codici non già incontrati.
+   //for efficiency reasons I will limit code search to the first 1000 rows: I suppose that codes that are not there will not be in the remaining rows.
   int iRow=0;
   while (!inFile.atEnd()) {
     iRow++;
@@ -122,19 +139,23 @@ void MainWindow::dropEvent(QDropEvent *event)
     inLines.append(inFile.readLine());
   }
 
+  //Update tree with codes and varialble names with the contents got from the read file:
   QTreeWidgetItem treeItem;
   treeItems.clear();
   ui->treeWidget->setColumnCount(2);
-  for (int i=0; i<treeCodes.count(); i++){
+  for (int i=0; i<availableCodes.count(); i++){
     bool codeFound=false;
     foreach(QString line1,inLines){
-      if(!codeFound && line1.contains(treeCodes[i])){
+      if(!codeFound && line1.contains(availableCodes[i])){
         codeFound=true;
         QStringList list;
-        list.append(treeCodes[i]+"   ");
-        list.append(treeNames[i]);
+//        list.append(availableCodes[i]+"   ");
+        list.append(availableCodes[i]);
+        list.append(availableNames[i]);
         treeItems.append(new QTreeWidgetItem((QTreeWidget*)0,list));
         treeItems[treeItems.count()-1]->setCheckState(0,Qt::Checked);
+        treeItemsCol0.append(availableCodes[i]);
+        treeItemsCol1.append(availableNames[i]);
       }
     }
   }
@@ -155,15 +176,23 @@ void MainWindow::on_okButton_clicked(){
      return;
   }
 
-  // Each field must give rise to a different ADF file:
-  outFiles=new QFile[treeNames.count()];
-  QStringList outFileNames;
+  // Each checked field must give rise to a different ADF file:
+  int checkedFiles=0;
+  for(int i=0; i<treeItems.count(); i++){
+    if(treeItems[i]->checkState(0))
+       checkedFiles++;
+  }
+  QFile * outFiles;
+  outFiles=new QFile[checkedFiles];
+  QStringList outFileNames, shortOutFNames;
 
-  QStringList shortOutFNames;
-  foreach(QString varName, treeNames){
+  for(int i=0; i<treeItems.count(); i++){
+    if(!treeItems[i]->checkState(0))
+       continue;
     QString fileName=inFileName;
     fileName.chop(4);
-    fileName=fileName+"_"+varName+".ADF";
+    QString str= treeItems[i]->text(1);
+    fileName=fileName+"_"+treeItems[i]->text(1)+".ADF";
     outFileNames.append(fileName);
     int pos=fileName.lastIndexOf('/');
     QString shortName=fileName.mid(pos+1,fileName.count()-pos);
@@ -171,19 +200,23 @@ void MainWindow::on_okButton_clicked(){
   }
 
   QTextStream * outStreams;
-  outStreams=new QTextStream[treeNames.count()];
+  outStreams=new QTextStream[checkedFiles];
 
-
-  for(int i=0; i<treeNames.count(); i++){
+  int currentField=0;
+  // The number of outFiles and outStreams is equal to the checked values in treeItems (i.e. variable checkedFiles). Variable actualFile will count these files.
+  for(int i=0; i<treeItems.count(); i++){
     if(!treeItems[i]->checkState(0))
        continue;
-      outFiles[i].setFileName(outFileNames[i]);
-    if(!outFiles[i].open(QIODevice::WriteOnly | QIODevice::Text)){
+    outFiles[currentField].setFileName(outFileNames[currentField]);
+    if(!outFiles[currentField].open(QIODevice::WriteOnly | QIODevice::Text)){
       ui->okLabel->setText("Unable to open file "+shortOutFNames[i]+" for writing!");
       return;
     }
-    outStreams[i].setDevice(&outFiles[i]);
+    outStreams[currentField].setDevice(&outFiles[currentField]);
+    currentField++;
   }
+
+  //***Here actualFile MUST be equal to checkedFiles!!
 
 
   //Bypassing header line:
@@ -209,25 +242,34 @@ void MainWindow::on_okButton_clicked(){
   //add hours:
   iniSecs+=3600.*hh.toDouble();
 
-  int fieldNum=0,sampleCount=0;
+  int sampleCount=0;
+
+  currentField=0;
   //Writing header lines
-  for (int i=0; i<treeNames.count(); i++){
-    outStreams[i]<<header1<<"\n";
-    outStreams[i]<<"t\t"<<treeNames[i]<<"\n";
+  for (int i=0; i<treeItems.count(); i++){
+    if(treeItems[i]->checkState(0)){
+      outStreams[currentField]<<header1<<"\n";
+      outStreams[currentField]<<"t\t"<<treeItems[currentField]->text(1)<<"\n";
+      currentField++;
+    }
   }
 
-  foreach (QString code,treeCodes){
+  currentField=0;
+  for (int i=0; i<treeItems.count(); i++){
+    QString str= treeItems[i]->text(0);
+    if(!treeItems[i]->checkState(0))
+       continue;
     sampleCount=0;
     foreach(QString line1,inLines){
-      if(line1.contains(code)){
+      if(line1.contains(treeItems[i]->text(0))){
         QString outLine=processLine(line1,iniSecs);
-        outStreams[fieldNum]<<outLine<<"\n";
+        outStreams[currentField]<<outLine<<"\n";
         sampleCount++;
       }
     }
-    fieldNum++;
+    currentField++;
   }
-  for(int i=0; i<treeNames.count(); i++){
+  for(int i=0; i<checkedFiles; i++){
     outFiles[i].close();
   }
   ui->okLabel->setText("Output files correctly created! ");
@@ -270,11 +312,11 @@ QString MainWindow::processLine(QString line_, double iniSecs_){
 }
 
 void MainWindow::on_selectBtn_clicked() {
-  for(int i=0; i<treeNames.count(); i++)
+  for(int i=0; i<treeItems.count(); i++)
     treeItems[i]->setCheckState(0,Qt::Checked);
 }
 
 void MainWindow::on_unselectBtn_clicked() {
-    for(int i=0; i<treeNames.count(); i++)
+    for(int i=0; i<treeItems.count(); i++)
       treeItems[i]->setCheckState(0,Qt::Unchecked);
 }
