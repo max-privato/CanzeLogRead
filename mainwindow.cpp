@@ -95,28 +95,31 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
 
   availableCodes.append("793.62503f.24");
   availableNames.append("vMains12");
-  longNames.append(" ");
+  longNames.append("Mains phase 1-2 voltage RMS value");
 
   availableCodes.append("793.625041.24");
   availableNames.append("vMains23");
-  longNames.append(" ");
+  longNames.append("Mains phase 2-3 voltage RMS value");
 
   availableCodes.append("793.625042.24");
   availableNames.append("vMains31");
-  longNames.append(" ");
+  longNames.append("Mains phase 3-1 voltage RMS value");
 
   availableCodes.append("793.622001.24");
   availableNames.append("iMains1");
-  longNames.append(" ");
+  longNames.append("Mains phase 1 current RMS value");
 
   availableCodes.append("793.62503a.24");
   availableNames.append("iMains2");
-  longNames.append(" ");
+  longNames.append("Mains phase 1 current RMS value");
 
-  availableCodes.append("793.62503b.24"); availableNames.append("iMains3");
-  longNames.append(" ");
-  availableCodes.append("793.62504a.24"); availableNames.append("pMains");
-  longNames.append(" ");
+  availableCodes.append("793.62503b.24");
+  availableNames.append("iMains3");
+  longNames.append("Mains phase 1 current RMS value");
+
+  availableCodes.append("793.62504a.24");
+  availableNames.append("pMains");
+  longNames.append("Mains active power consumed");
 
 // Miscellaneous:
   availableCodes.append("42e.20"); availableNames.append("fanSpeed");
