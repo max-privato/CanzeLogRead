@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
   treeCodes.append("793.62504a.24"); treeNames.append("pMains");
   treeCodes.append("5d7.0"); treeNames.append("vhSpeed");
 
+  /*
 
   // Prepare listTree:
   ui->treeWidget->setColumnCount(2);
@@ -48,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
    ui->treeWidget->insertTopLevelItems(0, treeItems);
    ui->treeWidget->resizeColumnToContents(0);
    ui->treeWidget->resizeColumnToContents(1);
+   */
 }
 
 MainWindow::~MainWindow() {
@@ -62,7 +64,7 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event){
 void MainWindow::dropEvent(QDropEvent *event)
 {
   /* Funzione per il caricamento dei files che vengono "droppati" sulla finestra*/
-  /* Function for loading files that are "dropped" on the window */
+  /* Function for loading dropped files */
 
   const QMimeData *mimeData = event->mimeData();
   inFileName= mimeData->urls().at(0).path();
@@ -71,6 +73,43 @@ void MainWindow::dropEvent(QDropEvent *event)
   ui->okLabel->setText(initialLabel3Text);
   ui->okLabel->setEnabled(true);
   ui->okButton->setEnabled(true);
+
+  // Ora procedo con l'individuazione dei codici presenti nel file
+  QStringList inLines;
+  QFile inFile(inFileName);
+  if (!inFile.open(QIODevice::ReadOnly | QIODevice::Text)){
+     ui->okLabel->setText("Unable to open file for reading!");
+     return;
+  }
+   //per ragioni di efficienza mi limito a ricercare i codici nelle sole prime 1000 righe. Ridengo praticamente impossibile che oltre le prime 1000 righe visi posano trovare codici non già incontrati.
+  int iRow=0;
+  while (!inFile.atEnd()) {
+    iRow++;
+    if(iRow>1000)
+      break;
+    inLines.append(inFile.readLine());
+  }
+
+  QTreeWidgetItem treeItem;
+  treeItems.clear();
+  ui->treeWidget->setColumnCount(2);
+  for (int i=0; i<treeCodes.count(); i++){
+    bool codeFound=false;
+    foreach(QString line1,inLines){
+      if(!codeFound && line1.contains(treeCodes[i])){
+        codeFound=true;
+        QStringList list;
+        list.append(treeCodes[i]+"   ");
+        list.append(treeNames[i]);
+        treeItems.append(new QTreeWidgetItem((QTreeWidget*)0,list));
+        treeItems[treeItems.count()-1]->setCheckState(0,Qt::Checked);
+      }
+    }
+  }
+  ui->treeWidget->clear();
+  ui->treeWidget->insertTopLevelItems(0, treeItems);
+  ui->treeWidget->resizeColumnToContents(0);
+  ui->treeWidget->resizeColumnToContents(1);
 }
 
 void MainWindow::on_okButton_clicked(){
@@ -197,8 +236,6 @@ QString MainWindow::processLine(QString line_, double iniSecs_){
   ret+=sValue;
   return ret;
 }
-
-
 
 void MainWindow::on_selectBtn_clicked() {
   for(int i=0; i<treeNames.count(); i++)
