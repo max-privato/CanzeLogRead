@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
   //Prepare QStringlist to be inserted into tree.codeNameTable
 
   // ********** longNames impelementation has just started.
-  // ********** by far they do nothingare started to
+  // ********** by far they do nothing
 
   // Battery-related quantities (excluding individual cells)
   availableCodes.append("7ec.623203.24");
@@ -67,6 +67,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
   availableCodes.append("1f8.16");
   availableNames.append("eleBrakeTorque2");
   longNames.append("TotalPotentialResistiveWheelsTorque");
+
+  availableCodes.append("7bc.624b7e.28");
+  availableNames.append("DriverBrakeWheelTq_Req");
+  longNames.append("DriverBrakeWheelTq_Req");
+
+  availableCodes.append("764.6143.88");
+  availableNames.append("IH_ElectricalPowerDrived");
+  longNames.append("IH_ElectricalPowerDrived");
 
   availableCodes.append("5d7.0");
   availableNames.append("vhSpeed");
