@@ -24,118 +24,89 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
   // Battery-related quantities (excluding individual cells)
   availableCodes.append("7ec.623203.24");
   availableNames.append("vBatHV");
-  longNames.append("HV LBC voltage measure");
 
   availableCodes.append("7ec.623204.24");
   availableNames.append("iBatHV");
-  longNames.append("HV LBC current measure");
 
   availableCodes.append("7ec.622002.24");
   availableNames.append("batSOC");
-  longNames.append("State Of Charge (SOC) HV battery");
 
   availableCodes.append("658.33");
   availableNames.append("batSOH");
-  longNames.append("HV Battery Health");
 
   availableCodes.append("7bb.6103.192");
   availableNames.append("batSOCreal");
-  longNames.append("Real State of Charge");
 
   availableCodes.append("42e.44");
   availableNames.append("batTemp");
-  longNames.append("Battery Temp");
 
   availableCodes.append("7bb.6161.96");
   availableNames.append("batTot_kms");
-  longNames.append("HV Battery voltage");
 
   availableCodes.append("7bb.6161.120");
   availableNames.append("batTot_kWh");
-  longNames.append("kWh from beginning of Battery life");
 
 
   // Propulsion related quantities:
   availableCodes.append("18a.27");
   availableNames.append("coastingTorque");
-  longNames.append(" ");
 
   availableCodes.append("1f8.28");
   availableNames.append("eleBrakeTorque1");
-  longNames.append("ElecBrakeWheelsTorqueApplied");
 
   availableCodes.append("1f8.16");
   availableNames.append("eleBrakeTorque2");
-  longNames.append("TotalPotentialResistiveWheelsTorque");
 
   availableCodes.append("7bc.624b7e.28");
   availableNames.append("DriverBrakeWheelTq_Req");
-  longNames.append("DriverBrakeWheelTq_Req");
 
   availableCodes.append("764.6143.88");
   availableNames.append("IH_ElectricalPowerDrived");
-  longNames.append("IH_ElectricalPowerDrived");
 
   availableCodes.append("5d7.0");
   availableNames.append("vhSpeed");
-  longNames.append(" ");
 
   // Mains and charging related quantities:
   availableCodes.append("e.56");
   availableNames.append("pCharge_kW");
-  longNames.append(" ");
 
   availableCodes.append("793.625062.24");
   availableNames.append("groundResis");
-  longNames.append(" ");
 
   availableCodes.append("793.62502c.24");
   availableNames.append("vMains1");
-  longNames.append(" ");
 
   availableCodes.append("793.62502d.24");
   availableNames.append("vMains2");
-  longNames.append(" ");
 
   availableCodes.append("793.62502e.24");
   availableNames.append("vMains3");
-  longNames.append(" ");
 
   availableCodes.append("793.62503f.24");
   availableNames.append("vMains12");
-  longNames.append("Mains phase 1-2 voltage RMS value");
 
   availableCodes.append("793.625041.24");
   availableNames.append("vMains23");
-  longNames.append("Mains phase 2-3 voltage RMS value");
 
   availableCodes.append("793.625042.24");
   availableNames.append("vMains31");
-  longNames.append("Mains phase 3-1 voltage RMS value");
 
   availableCodes.append("793.622001.24");
   availableNames.append("iMains1");
-  longNames.append("Mains phase 1 current RMS value");
 
   availableCodes.append("793.62503a.24");
   availableNames.append("iMains2");
-  longNames.append("Mains phase 1 current RMS value");
 
   availableCodes.append("793.62503b.24");
   availableNames.append("iMains3");
-  longNames.append("Mains phase 1 current RMS value");
 
   availableCodes.append("793.62504a.24");
   availableNames.append("pMains");
-  longNames.append("Mains active power consumed");
 
 // Miscellaneous:
   availableCodes.append("42e.20"); availableNames.append("fanSpeed");
-  longNames.append(" ");
   availableCodes.append("42e.38"); availableNames.append("iPilotCharge");
-  longNames.append(" ");
   availableCodes.append("7ec.622005.24"); availableNames.append("vBat12V");
-  longNames.append(" ");
 
   // Cell voltage codes:
   for (int i=16; i<993; i+=16){
@@ -151,7 +122,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
      nameStr="vCell"+iStr;
      availableCodes.append(codeStr);
      availableNames.append(nameStr);
-     longNames.append(" ");
   }
   // Cel temperature codes::
   for (int i=32; i<997; i+=24){
@@ -167,7 +137,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
      nameStr="tempCell"+iStr;
      availableCodes.append(codeStr);
      availableNames.append(nameStr);
-     longNames.append(" ");
   }
   // cell Balancing Switches::
   for (int i=16; i<105; i+=8){
@@ -183,7 +152,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
      nameStr="balanceSwitch"+iStr;
      availableCodes.append(codeStr);
      availableNames.append(nameStr);
-     longNames.append(" ");
   }
 
 }
@@ -199,8 +167,13 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event){
 
 void MainWindow::dropEvent(QDropEvent *event)
 {
-  /* Funzione per il caricamento dei files che vengono "droppati" sulla finestra*/
-  /* Function for loading dropped files */
+  /* Function for loading dropped files.
+   * Dropped files are:
+   * - first searched to find all the available codes
+   * - then it is checked whether the We have short names for some of the codes via ShortName.txt
+   * - then tha tree is created allowingusers to select all or just some of the existing namest
+   *   to be converted and saved in individual files
+*/
 
   const QMimeData *mimeData = event->mimeData();
   inFileName= mimeData->urls().at(0).path();
@@ -217,36 +190,48 @@ void MainWindow::dropEvent(QDropEvent *event)
      ui->okLabel->setText("Unable to open file for reading!");
      return;
   }
-   //for efficiency reasons I will limit code search to the first 1000 rows: I suppose that codes that are not there will not be in the remaining rows.
+
+  // Now I search for the available codes.  For efficiency reasons, I will limit code search to the first 1000 rows: I suppose that codes that are not there will not be in the remaining rows.
   int iRow=0;
   while (!inFile.atEnd()) {
+    QString line, code, longName;
     iRow++;
     if(iRow>1000)
       break;
-    inLines.append(inFile.readLine());
-  }
+    line=inFile.readLine();
+    if(iRow==1)
+      continue;
+    int codeStart=line.indexOf(',');
+   //eliminate comma to allow the next search to find the second comma in inLines[i]:
+    line[codeStart]=' ';
+    int codeStop=line.indexOf(',');
+    code=line.mid(codeStart+1,codeStop-codeStart-1);
+    if(!codes.contains(code)){
+       codes.append(code);
+       int endLongName=line.lastIndexOf(',');
+       line.truncate(endLongName);
+       endLongName=line.lastIndexOf(',');
+       line.truncate(endLongName);
+       int startLongName=line.lastIndexOf(',');
+       longName=line.mid(startLongName+1,endLongName-startLongName-1);
+       longNames.append(longName);
 
-  //Update tree with codes and varialble names with the contents got from the read file:
-  QTreeWidgetItem treeItem;
-  treeItems.clear();
-  ui->treeWidget->setColumnCount(3);
-  for (int i=0; i<availableCodes.count(); i++){
-    bool codeFound=false;
-    foreach(QString line1,inLines){
-      if(!codeFound && line1.contains(availableCodes[i])){
-        codeFound=true;
-        QStringList list;
-//        list.append(availableCodes[i]+"   ");
-        list.append(availableCodes[i]);
-        list.append(availableNames[i]);
-        list.append(longNames[i]);
-        treeItems.append(new QTreeWidgetItem((QTreeWidget*)0,list));
-        treeItems[treeItems.count()-1]->setCheckState(0,Qt::Checked);
-        treeItemsCol0.append(availableCodes[i]);
-        treeItemsCol1.append(availableNames[i]);
-      }
+       // Per ora uso come short names queli codici; po implementerò lla possibilità di definirli via file.
+       shortNames.append(code);
     }
   }
+
+
+  //Fill Codes list and LongNames list:
+  for (int i=0; i<codes.count(); i++){
+    QStringList list;
+    list.append(codes[i]);
+    list.append(shortNames[i]);
+    list.append(longNames[i]);
+    treeItems.append(new QTreeWidgetItem((QTreeWidget*)0,list));
+    treeItems[treeItems.count()-1]->setCheckState(0,Qt::Checked);
+  }
+
   ui->treeWidget->clear();
   ui->treeWidget->insertTopLevelItems(0, treeItems);
   ui->treeWidget->resizeColumnToContents(0);
@@ -390,7 +375,7 @@ QString MainWindow::processLine(QString line_, double iniSecs_){
   timeS-=iniSecs_;
   // find value:
   int valueEndPos=line_.lastIndexOf(',');
-  // Eliminate comma to allow next serch:
+  // Eliminate comma to allow next search:
   line_[valueEndPos]=' ';
   //now last comma is just before the value:
   int valueStartPos=line_.lastIndexOf(',')+1;
