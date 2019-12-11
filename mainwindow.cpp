@@ -194,11 +194,13 @@ void MainWindow::on_okButton_clicked(){
   outStreams=new QTextStream[checkedFiles];
 
   int currentField=0;
+  QString actualLongName;
   // The number of outFiles and outStreams is equal to the checked values in treeItems (i.e. variable checkedFiles). Variable actualFile will count these files.
   for(int i=0; i<treeItems.count(); i++){
     if(!treeItems[i]->checkState(0))
        continue;
     outFiles[currentField].setFileName(outFileNames[currentField]);
+    actualLongName=longNames[i];
     if(!outFiles[currentField].open(QIODevice::WriteOnly | QIODevice::Text)){
       ui->okLabel->setText("Unable to open file "+shortOutFNames[i]+" for writing!");
       return;
@@ -208,7 +210,6 @@ void MainWindow::on_okButton_clicked(){
   }
 
   //***Here currentFiels MUST be equal to checkedFiles!!
-
 
   //Bypassing header line:
   line = inFile.readLine();
@@ -220,7 +221,7 @@ void MainWindow::on_okButton_clicked(){
   //Creating output Header1 taking date-time info from the first line:
   QString header1;
   header1=" //"+inLines[0].mid(0,4)+"-"+inLines[0].mid(4,2)+"-"+inLines[0].mid(6,2) +
-             "; "+inLines[0].mid(8,2)+":"+inLines[0].mid(10,2);
+             "; "+inLines[0].mid(8,2)+":"+inLines[0].mid(10,2)+"  Long name: \""+actualLongName+"\"";
 
   //Determining seconds corresponding to intial time to be substracted to all outputed seconds:
   double iniSecs;
