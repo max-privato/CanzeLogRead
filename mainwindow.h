@@ -27,7 +27,7 @@ private slots:
 
 private:
     int lineCount;
-    QStringList codes, shortNames, availableCodes, availableNames, longNames;
+    QStringList codes, shortNames, longNames;
     QString inFileName,  initialLabel3Text;
     QList<QTreeWidgetItem *> treeItems;
     QStringList treeItemsCol0, treeItemsCol1;  //per debug: non si riescono al eggere nel debugger i testi delle treeItems.

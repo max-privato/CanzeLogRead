@@ -15,145 +15,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
   move(90,0);
   initialLabel3Text=ui->okLabel->text();
   setAcceptDrops(true);
-
-  //Prepare QStringlist to be inserted into tree.codeNameTable
-
-  // ********** longNames impelementation has just started.
-  // ********** by far they do nothing
-
-  // Battery-related quantities (excluding individual cells)
-  availableCodes.append("7ec.623203.24");
-  availableNames.append("vBatHV");
-
-  availableCodes.append("7ec.623204.24");
-  availableNames.append("iBatHV");
-
-  availableCodes.append("7ec.622002.24");
-  availableNames.append("batSOC");
-
-  availableCodes.append("658.33");
-  availableNames.append("batSOH");
-
-  availableCodes.append("7bb.6103.192");
-  availableNames.append("batSOCreal");
-
-  availableCodes.append("42e.44");
-  availableNames.append("batTemp");
-
-  availableCodes.append("7bb.6161.96");
-  availableNames.append("batTot_kms");
-
-  availableCodes.append("7bb.6161.120");
-  availableNames.append("batTot_kWh");
-
-
-  // Propulsion related quantities:
-  availableCodes.append("18a.27");
-  availableNames.append("coastingTorque");
-
-  availableCodes.append("1f8.28");
-  availableNames.append("eleBrakeTorque1");
-
-  availableCodes.append("1f8.16");
-  availableNames.append("eleBrakeTorque2");
-
-  availableCodes.append("7bc.624b7e.28");
-  availableNames.append("DriverBrakeWheelTq_Req");
-
-  availableCodes.append("764.6143.88");
-  availableNames.append("IH_ElectricalPowerDrived");
-
-  availableCodes.append("5d7.0");
-  availableNames.append("vhSpeed");
-
-  // Mains and charging related quantities:
-  availableCodes.append("e.56");
-  availableNames.append("pCharge_kW");
-
-  availableCodes.append("793.625062.24");
-  availableNames.append("groundResis");
-
-  availableCodes.append("793.62502c.24");
-  availableNames.append("vMains1");
-
-  availableCodes.append("793.62502d.24");
-  availableNames.append("vMains2");
-
-  availableCodes.append("793.62502e.24");
-  availableNames.append("vMains3");
-
-  availableCodes.append("793.62503f.24");
-  availableNames.append("vMains12");
-
-  availableCodes.append("793.625041.24");
-  availableNames.append("vMains23");
-
-  availableCodes.append("793.625042.24");
-  availableNames.append("vMains31");
-
-  availableCodes.append("793.622001.24");
-  availableNames.append("iMains1");
-
-  availableCodes.append("793.62503a.24");
-  availableNames.append("iMains2");
-
-  availableCodes.append("793.62503b.24");
-  availableNames.append("iMains3");
-
-  availableCodes.append("793.62504a.24");
-  availableNames.append("pMains");
-
-// Miscellaneous:
-  availableCodes.append("42e.20"); availableNames.append("fanSpeed");
-  availableCodes.append("42e.38"); availableNames.append("iPilotCharge");
-  availableCodes.append("7ec.622005.24"); availableNames.append("vBat12V");
-
-  // Cell voltage codes:
-  for (int i=16; i<993; i+=16){
-     QString iStr, codeStr, nameStr;
-     iStr.setNum(i);
-     codeStr="7bb.6141."+iStr;
-     int cell=i/16;
-     if(cell<10){
-       iStr.setNum(cell);
-       iStr="0"+iStr;
-     }  else
-       iStr.setNum(cell);
-     nameStr="vCell"+iStr;
-     availableCodes.append(codeStr);
-     availableNames.append(nameStr);
-  }
-  // Cel temperature codes::
-  for (int i=32; i<997; i+=24){
-     QString iStr, codeStr, nameStr;
-     iStr.setNum(i);
-     codeStr="7bb.6104."+iStr;
-     int cell=i/24;
-     if(cell<10){
-       iStr.setNum(cell);
-       iStr="0"+iStr;
-     }  else
-       iStr.setNum(cell);
-     nameStr="tempCell"+iStr;
-     availableCodes.append(codeStr);
-     availableNames.append(nameStr);
-  }
-  // cell Balancing Switches::
-  for (int i=16; i<105; i+=8){
-     QString iStr, codeStr, nameStr;
-     iStr.setNum(i);
-     codeStr="7bb.6107."+iStr;
-     int cell=i/8-1;
-     if(cell<10){
-       iStr.setNum(cell);
-       iStr="0"+iStr;
-     }  else
-       iStr.setNum(cell);
-     nameStr="balanceSwitch"+iStr;
-     availableCodes.append(codeStr);
-     availableNames.append(nameStr);
-  }
-
 }
 
 MainWindow::~MainWindow() {
@@ -216,10 +77,65 @@ void MainWindow::dropEvent(QDropEvent *event)
        longName=line.mid(startLongName+1,endLongName-startLongName-1);
        longNames.append(longName);
 
-       // Per ora uso come short names queli codici; po implementerò lla possibilità di definirli via file.
+       // Per ora uso come short names queli codici; poi implementerò lla possibilità di definirli via file.
        shortNames.append(code);
     }
   }
+
+   // Here we define some short names which is impractical to pmanually put in shortNames.txt (v. Word documentation )
+
+  // Cell voltages:
+    for (int i=16; i<993; i+=16){
+       QString iStr, codeStr, nameStr;
+       iStr.setNum(i);
+       codeStr="7bb.6141."+iStr;
+       int index= codes.indexOf(codeStr);
+       int cell=i/16;
+       if(cell<10){
+         iStr.setNum(cell);
+         iStr="0"+iStr;
+       }  else
+         iStr.setNum(cell);
+       nameStr="vCell"+iStr;
+       shortNames[index]=nameStr;
+    }
+
+    // Cell temperature codes:
+    for (int i=32; i<997; i+=24){
+       QString iStr, codeStr, nameStr;
+       iStr.setNum(i);
+       codeStr="7bb.6104."+iStr;
+       int index= codes.indexOf(codeStr);
+       if(index<0)
+           continue;
+       int cell=i/24;
+       if(cell<10){
+         iStr.setNum(cell);
+         iStr="0"+iStr;
+       }  else
+         iStr.setNum(cell);
+       nameStr="tempCell"+iStr;
+       shortNames[index]=nameStr;
+    }
+
+    // cell Balancing Switches::
+    for (int i=16; i<105; i+=8){
+       QString iStr, codeStr, nameStr;
+       iStr.setNum(i);
+       codeStr="7bb.6107."+iStr;
+       int index= codes.indexOf(codeStr);
+       if(index<0)
+           continue;
+       int cell=i/8-1;
+       if(cell<10){
+         iStr.setNum(cell);
+         iStr="0"+iStr;
+       }  else
+         iStr.setNum(cell);
+       nameStr="balanceSwitch"+iStr;
+       shortNames[index]=nameStr;
+    }
+
 
 
   //Fill Codes list and LongNames list:
