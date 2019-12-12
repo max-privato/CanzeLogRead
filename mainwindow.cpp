@@ -5,7 +5,7 @@
 #include <QMimeData>
 
 /* Il formato del log contiene campioni delle varie grandezze a differenti istanti.
- * Per questa ragione un unico adf non p adatto. Di consegunenza per ogni filelog creerò
+ * Per questa ragione un unico adf non è adatto. Di consegunenza per ogni filelog creerò
  * tanti adf, ognuno ad una sola variabile, quante sono le variabili presenti nel log
 */
 
@@ -32,7 +32,7 @@ void MainWindow::dropEvent(QDropEvent *event)
    * Dropped files are:
    * - first searched to find all the available codes
    * - then it is checked whether the We have short names for some of the codes via ShortName.txt
-   * - then tha tree is created allowingusers to select all or just some of the existing namest
+   * - then the tree is created allowingusers to select all or just some of the existing namest
    *   to be converted and saved in individual files
 */
 
@@ -43,6 +43,10 @@ void MainWindow::dropEvent(QDropEvent *event)
   ui->okLabel->setText(initialLabel3Text);
   ui->okLabel->setEnabled(true);
   ui->okButton->setEnabled(true);
+  codes.clear();
+  shortNames.clear();
+  longNames.clear();
+  treeItems.clear();
 
   // Opening input file:
   QStringList inLines;
@@ -77,65 +81,99 @@ void MainWindow::dropEvent(QDropEvent *event)
        longName=line.mid(startLongName+1,endLongName-startLongName-1);
        longNames.append(longName);
 
-       // Per ora uso come short names queli codici; poi implementerò lla possibilità di definirli via file.
+       // Per ora uso come short names quelli codici; poi implementerò lla possibilità di definirli via file.
        shortNames.append(code);
     }
   }
 
-   // Here we define some short names which is impractical to pmanually put in shortNames.txt (v. Word documentation )
+   // Here we define some short names which is impractical to manually put in shortNames.txt (v. Word documentation )
 
   // Cell voltages:
-    for (int i=16; i<993; i+=16){
-       QString iStr, codeStr, nameStr;
-       iStr.setNum(i);
-       codeStr="7bb.6141."+iStr;
-       int index= codes.indexOf(codeStr);
-       int cell=i/16;
-       if(cell<10){
-         iStr.setNum(cell);
-         iStr="0"+iStr;
-       }  else
-         iStr.setNum(cell);
-       nameStr="vCell"+iStr;
-       shortNames[index]=nameStr;
-    }
+  for (int i=16; i<=1536; i+=16){
+     QString iStr, iStr1, codeStr, nameStr;
+     iStr.setNum(i);
+     codeStr="7bb.6141."+iStr;
+     if(i>992){
+       iStr1.setNum(i-992);
+       codeStr="7bb.6142."+iStr1;
+     }
 
-    // Cell temperature codes:
-    for (int i=32; i<997; i+=24){
-       QString iStr, codeStr, nameStr;
-       iStr.setNum(i);
-       codeStr="7bb.6104."+iStr;
-       int index= codes.indexOf(codeStr);
-       if(index<0)
-           continue;
-       int cell=i/24;
-       if(cell<10){
-         iStr.setNum(cell);
-         iStr="0"+iStr;
-       }  else
-         iStr.setNum(cell);
-       nameStr="tempCell"+iStr;
-       shortNames[index]=nameStr;
-    }
+     int index= codes.indexOf(codeStr);
+     int cell=i/16;
+     if(cell<10){
+       iStr.setNum(cell);
+       iStr="0"+iStr;
+     }  else
+       iStr.setNum(cell);
+     nameStr="vCell"+iStr;
+     //Avoid segfault for possibly larger batteries of future ZOEs
+     if(index<0 ||index>shortNames.count())
+       break;
+     shortNames[index]=nameStr;
+  }
 
-    // cell Balancing Switches::
-    for (int i=16; i<105; i+=8){
-       QString iStr, codeStr, nameStr;
-       iStr.setNum(i);
-       codeStr="7bb.6107."+iStr;
-       int index= codes.indexOf(codeStr);
-       if(index<0)
-           continue;
-       int cell=i/8-1;
-       if(cell<10){
-         iStr.setNum(cell);
-         iStr="0"+iStr;
-       }  else
-         iStr.setNum(cell);
-       nameStr="balanceSwitch"+iStr;
-       shortNames[index]=nameStr;
-    }
+  // Cell temperature codes:
+  for (int i=32; i<997; i+=24){
+    QString iStr, codeStr, nameStr;
+    iStr.setNum(i);
+    codeStr="7bb.6104."+iStr;
+    int index= codes.indexOf(codeStr);
+    if(index<0)
+      continue;
+    int cell=i/24;
+    if(cell<10){
+      iStr.setNum(cell);
+      iStr="0"+iStr;
+    }  else
+     iStr.setNum(cell);
+     nameStr="tempCell"+iStr;
+     shortNames[index]=nameStr;
+  }
 
+  // cell Balancing Switches::
+  for (int i=16; i<105; i+=8){
+     QString iStr, codeStr, nameStr;
+     iStr.setNum(i);
+     codeStr="7bb.6107."+iStr;
+     int index= codes.indexOf(codeStr);
+     if(index<0)
+         continue;
+     int cell=i/8-1;
+     if(cell<10){
+       iStr.setNum(cell);
+       iStr="0"+iStr;
+     }  else
+       iStr.setNum(cell);
+     nameStr="balanceSwitch"+iStr;
+     shortNames[index]=nameStr;
+  }
+
+  // Finally, in case file ShortNames.txt exists, I replace already defined short names with those read from file.
+  QString snFileName=inFileName;  //short names file name
+  snFileName.chop(snFileName.count()-snFileName.lastIndexOf('/')-1);
+  snFileName=snFileName+"ShortNames.txt";
+
+  QFile snFile(snFileName);
+  bool snFileExists=false;
+  if (snFile.open(QIODevice::ReadOnly | QIODevice::Text)){
+    snFileExists=true;
+  }
+
+  if (snFileExists){
+    iRow=0;
+    QString line;
+    while (!snFile.atEnd()) {
+      line = snFile.readLine();
+      QString code=line;
+      code.truncate(line.indexOf(' '));
+      QString shortName=line;
+      shortName=shortName.mid(line.indexOf(' '),line.count()-line.indexOf(' ')-1);
+      int index=codes.indexOf(code);
+      if(index>-1)
+        shortNames[index]=shortName;
+      iRow++;
+    }
+  }
 
 
   //Fill Codes list and LongNames list:
@@ -152,6 +190,10 @@ void MainWindow::dropEvent(QDropEvent *event)
   ui->treeWidget->insertTopLevelItems(0, treeItems);
   ui->treeWidget->resizeColumnToContents(0);
   ui->treeWidget->resizeColumnToContents(1);
+
+
+  inFile.close();
+  snFile.close();
 }
 
 void MainWindow::on_okButton_clicked(){
@@ -209,7 +251,7 @@ void MainWindow::on_okButton_clicked(){
     currentField++;
   }
 
-  //***Here currentFiels MUST be equal to checkedFiles!!
+  //***Here currentField MUST be equal to checkedFiles!!
 
   //Bypassing header line:
   line = inFile.readLine();
@@ -221,7 +263,7 @@ void MainWindow::on_okButton_clicked(){
   //Creating output Header1 taking date-time info from the first line:
   QString header1;
   header1=" //"+inLines[0].mid(0,4)+"-"+inLines[0].mid(4,2)+"-"+inLines[0].mid(6,2) +
-             "; "+inLines[0].mid(8,2)+":"+inLines[0].mid(10,2)+"  Long name: \""+actualLongName+"\"";
+             "; "+inLines[0].mid(8,2)+":"+inLines[0].mid(10,2);
 
   //Determining seconds corresponding to intial time to be substracted to all outputed seconds:
   double iniSecs;
@@ -240,7 +282,7 @@ void MainWindow::on_okButton_clicked(){
   //Writing header lines
   for (int i=0; i<treeItems.count(); i++){
     if(treeItems[i]->checkState(0)){
-      outStreams[currentField]<<header1<<"\n";
+      outStreams[currentField]<<header1<<"  Long name: \""<<longNames[i]<<"\""<<"\n";
       outStreams[currentField]<<"t\t"<<treeItems[i]->text(1)<<"\n";
       currentField++;
     }
