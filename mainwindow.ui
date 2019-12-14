@@ -62,7 +62,7 @@ Splitted files will have &quot;ADF&quot; extension</string>
          </sizepolicy>
         </property>
         <property name="text">
-         <string>TextLabel</string>
+         <string>none</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -70,6 +70,13 @@ Splitted files will have &quot;ADF&quot; extension</string>
        </widget>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="shortNamesLbl">
+      <property name="text">
+       <string>File ShortNames.txt not read</string>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="Line" name="line_3">

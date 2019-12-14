@@ -159,6 +159,7 @@ void MainWindow::dropEvent(QDropEvent *event)
     snFileExists=true;
   }
 
+  ui->shortNamesLbl->setText("File ShortNames.txt not read");
   if (snFileExists){
     iRow=0;
     QString line;
@@ -173,6 +174,7 @@ void MainWindow::dropEvent(QDropEvent *event)
         shortNames[index]=shortName;
       iRow++;
     }
+    ui->shortNamesLbl->setText("File ShortNames.txt read");
   }
 
 
