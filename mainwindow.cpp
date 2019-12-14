@@ -292,7 +292,7 @@ void MainWindow::on_okButton_clicked(){
 
   currentField=0;
   for (int i=0; i<treeItems.count(); i++){
-      // Must add the two commas because othersswise I could search a subcode of a code that is a superset of what I'm seraching.
+      // Must add the two commas because othersswise I could search a subcode of a code that is a superset of what I'm searching.
     QString searchStr= ","+treeItems[i]->text(0)+",";
     if(!treeItems[i]->checkState(0))
        continue;
@@ -342,7 +342,7 @@ QString MainWindow::processLine(QString line_, double iniSecs_){
   int valueStartPos=line_.lastIndexOf(',')+1;
   sValue=line_.mid(valueStartPos,valueEndPos-valueStartPos);
 
-  ret.setNum(timeS);
+  ret.setNum(timeS,'f',3);
   ret+="\t";
   ret+=sValue;
   return ret;
