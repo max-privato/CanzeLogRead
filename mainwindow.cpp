@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) ,
   move(90,0);
   initialLabel3Text=ui->okLabel->text();
   setAcceptDrops(true);
+  logFileLoaded=false;
+  droppedShortNameFileName="";
 }
 
 MainWindow::~MainWindow() {
@@ -29,137 +31,55 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event){
 void MainWindow::dropEvent(QDropEvent *event)
 {
   /* Function for loading dropped files.
-   * Dropped files are:
+   * Dropped log files are:
    * - first searched to find all the available codes
    * - then it is checked whether the We have short names for some of the codes via ShortName.txt
    * - then the tree is created allowingusers to select all or just some of the existing namest
    *   to be converted and saved in individual files
+   *
+   * the user can drop also the "shortNames.txt" file: this will override the one read
+   * when reading the lof file or, in case the latter was not there, is however used to
+   * choose short names.
 */
-
+  bool shortNamesNowDropped=false; //initialization done just to avoid a warning
+  QString snFileName; //filename of the file defining short names
   const QMimeData *mimeData = event->mimeData();
-  inFileName= mimeData->urls().at(0).path();
-  inFileName.remove(0,1);
-  ui->label_4->setText(inFileName);
-  ui->okLabel->setText(initialLabel3Text);
-  ui->okLabel->setEnabled(true);
-  ui->okButton->setEnabled(true);
-  codes.clear();
-  shortNames.clear();
-  longNames.clear();
-  treeItems.clear();
 
-  // Opening input file:
-  QStringList inLines;
-  QFile inFile(inFileName);
-  if (!inFile.open(QIODevice::ReadOnly | QIODevice::Text)){
-     ui->okLabel->setText("Unable to open file for reading!");
-     return;
+  ui->shortNamesLbl->setText("File ShortNames.txt not read");
+  // If a log file has already been loaded we can drop a txt file to override existing short names
+  //We must first see if the dropped file is ShortNames,txt or a ont (in the latter case it is alog file)
+
+  QString droppedName=mimeData->urls().at(0).path();
+  int i=droppedName.lastIndexOf('/')+1;
+  QString shortedName=droppedName.mid(i,droppedName.count()-i);
+
+  if(shortedName=="ShortNames.txt"){
+    if(logFileLoaded){
+      snFileName=droppedName.remove(0,1);
+      ui->shortNamesLbl->setText("File ShortNames.txt dropped");
+      shortNamesNowDropped=true;
+    }else
+      return;
+  }else{
+    shortNamesNowDropped=false;
+    inFileName=mimeData->urls().at(0).path();  //short names file name
+    loadFileAndFillLists(inFileName);
+    snFileName=inFileName;
+    snFileName.chop(snFileName.count()-snFileName.lastIndexOf('/')-1);
+    snFileName=snFileName+"ShortNames.txt";
+    snFileName=snFileName.remove(0,1);
+    logFileLoaded=true;
   }
 
-  // Now I search for the available codes.  For efficiency reasons, I will limit code search to the first 1000 rows: I suppose that codes that are not there will not be in the remaining rows.
-  int iRow=0;
-  while (!inFile.atEnd()) {
-    QString line, code, longName;
-    iRow++;
-    if(iRow>1000)
-      break;
-    line=inFile.readLine();
-    if(iRow==1)
-      continue;
-    int codeStart=line.indexOf(',');
-   //eliminate comma to allow the next search to find the second comma in inLines[i]:
-    line[codeStart]=' ';
-    int codeStop=line.indexOf(',');
-    code=line.mid(codeStart+1,codeStop-codeStart-1);
-    if(!codes.contains(code)){
-       codes.append(code);
-       int endLongName=line.lastIndexOf(',');
-       line.truncate(endLongName);
-       endLongName=line.lastIndexOf(',');
-       line.truncate(endLongName);
-       int startLongName=line.lastIndexOf(',');
-       longName=line.mid(startLongName+1,endLongName-startLongName-1);
-       longNames.append(longName);
+  int iRow;
 
-       // Per ora uso come short names quelli codici; poi implementerò lla possibilità di definirli via file.
-       shortNames.append(code);
-    }
-  }
-
-   // Here we define some short names which is impractical to manually put in shortNames.txt (v. Word documentation )
-
-  // Cell voltages:
-  for (int i=16; i<=1536; i+=16){
-     QString iStr, iStr1, codeStr, nameStr;
-     iStr.setNum(i);
-     codeStr="7bb.6141."+iStr;
-     if(i>992){
-       iStr1.setNum(i-992);
-       codeStr="7bb.6142."+iStr1;
-     }
-
-     int index= codes.indexOf(codeStr);
-     int cell=i/16;
-     if(cell<10){
-       iStr.setNum(cell);
-       iStr="0"+iStr;
-     }  else
-       iStr.setNum(cell);
-     nameStr="vCell"+iStr;
-     //Avoid segfault for possibly larger batteries of future ZOEs
-     if(index<0 ||index>shortNames.count())
-       break;
-     shortNames[index]=nameStr;
-  }
-
-  // Cell temperature codes:
-  for (int i=32; i<997; i+=24){
-    QString iStr, codeStr, nameStr;
-    iStr.setNum(i);
-    codeStr="7bb.6104."+iStr;
-    int index= codes.indexOf(codeStr);
-    if(index<0)
-      continue;
-    int cell=i/24;
-    if(cell<10){
-      iStr.setNum(cell);
-      iStr="0"+iStr;
-    }  else
-     iStr.setNum(cell);
-     nameStr="tempCell"+iStr;
-     shortNames[index]=nameStr;
-  }
-
-  // cell Balancing Switches::
-  for (int i=16; i<105; i+=8){
-     QString iStr, codeStr, nameStr;
-     iStr.setNum(i);
-     codeStr="7bb.6107."+iStr;
-     int index= codes.indexOf(codeStr);
-     if(index<0)
-         continue;
-     int cell=i/8-1;
-     if(cell<10){
-       iStr.setNum(cell);
-       iStr="0"+iStr;
-     }  else
-       iStr.setNum(cell);
-     nameStr="balanceSwitch"+iStr;
-     shortNames[index]=nameStr;
-  }
-
-  // Finally, in case file ShortNames.txt exists, I replace already defined short names with those read from file.
-  QString snFileName=inFileName;  //short names file name
-  snFileName.chop(snFileName.count()-snFileName.lastIndexOf('/')-1);
-  snFileName=snFileName+"ShortNames.txt";
-
+  //Manage manual short names:
   QFile snFile(snFileName);
   bool snFileExists=false;
   if (snFile.open(QIODevice::ReadOnly | QIODevice::Text)){
     snFileExists=true;
   }
 
-  ui->shortNamesLbl->setText("File ShortNames.txt not read");
   if (snFileExists){
     iRow=0;
     QString line;
@@ -176,9 +96,11 @@ void MainWindow::dropEvent(QDropEvent *event)
     }
     ui->shortNamesLbl->setText("File ShortNames.txt read");
   }
+  snFile.close();
 
 
   //Fill Codes list and LongNames list:
+  treeItems.clear();
   for (int i=0; i<codes.count(); i++){
     QStringList list;
     list.append(codes[i]);
@@ -193,9 +115,6 @@ void MainWindow::dropEvent(QDropEvent *event)
   ui->treeWidget->resizeColumnToContents(0);
   ui->treeWidget->resizeColumnToContents(1);
 
-
-  inFile.close();
-  snFile.close();
 }
 
 void MainWindow::on_okButton_clicked(){
@@ -313,6 +232,124 @@ void MainWindow::on_okButton_clicked(){
   delete[] outFiles;
   delete[] outStreams;
 }
+
+
+void MainWindow:: loadFileAndFillLists(QString inFileName_){
+  inFileName_.remove(0,1);
+  ui->label_4->setText(inFileName_);
+  ui->okLabel->setText(initialLabel3Text);
+  ui->okLabel->setEnabled(true);
+  ui->okButton->setEnabled(true);
+  codes.clear();
+  shortNames.clear();
+  longNames.clear();
+
+
+  // Opening input file:
+  QStringList inLines;
+  QFile inFile(inFileName_);
+  if (!inFile.open(QIODevice::ReadOnly | QIODevice::Text)){
+     ui->okLabel->setText("Unable to open file for reading!");
+     return;
+  }
+  // Now I search for the available codes.  For efficiency reasons, I will limit code search to the first 1000 rows: I suppose that codes that are not there will not be in the remaining rows.
+  int iRow=0;
+  while (!inFile.atEnd()) {
+    QString line, code, longName;
+    iRow++;
+    if(iRow>1000)
+      break;
+    line=inFile.readLine();
+    if(iRow==1)
+      continue;
+    int codeStart=line.indexOf(',');
+   //eliminate comma to allow the next search to find the second comma in inLines[i]:
+    line[codeStart]=' ';
+    int codeStop=line.indexOf(',');
+    code=line.mid(codeStart+1,codeStop-codeStart-1);
+    if(!codes.contains(code)){
+      codes.append(code);
+      int endLongName=line.lastIndexOf(',');
+      line.truncate(endLongName);
+      endLongName=line.lastIndexOf(',');
+      line.truncate(endLongName);
+      int startLongName=line.lastIndexOf(',');
+      longName=line.mid(startLongName+1,endLongName-startLongName-1);
+      longNames.append(longName);
+
+     // Initially short names are taken equal to the codes; then they will be possibly overridden from the values in ShortNames.txt.
+      shortNames.append(code);
+    }
+  }
+
+
+ // Here we define some short names which is impractical to manually put in shortNames.txt (v. Word documentation )
+
+  // Cell voltages:
+  for (int i=16; i<=1536; i+=16){
+     QString iStr, iStr1, codeStr, nameStr;
+     iStr.setNum(i);
+     codeStr="7bb.6141."+iStr;
+     if(i>992){
+       iStr1.setNum(i-992);
+       codeStr="7bb.6142."+iStr1;
+     }
+
+     int index= codes.indexOf(codeStr);
+     int cell=i/16;
+     if(cell<10){
+       iStr.setNum(cell);
+       iStr="0"+iStr;
+     }  else
+       iStr.setNum(cell);
+     nameStr="vCell"+iStr;
+     //Avoid segfault for possibly larger batteries of future ZOEs
+     if(index<0 ||index>shortNames.count())
+       break;
+     shortNames[index]=nameStr;
+  }
+
+  // Cell temperature codes:
+  for (int i=32; i<997; i+=24){
+    QString iStr, codeStr, nameStr;
+    iStr.setNum(i);
+    codeStr="7bb.6104."+iStr;
+    int index= codes.indexOf(codeStr);
+    if(index<0)
+      continue;
+    int cell=i/24;
+    if(cell<10){
+      iStr.setNum(cell);
+      iStr="0"+iStr;
+    }  else
+     iStr.setNum(cell);
+     nameStr="tempCell"+iStr;
+     shortNames[index]=nameStr;
+  }
+
+  // cell Balancing Switches::
+  for (int i=16; i<105; i+=8){
+    QString iStr, codeStr, nameStr;
+    iStr.setNum(i);
+    codeStr="7bb.6107."+iStr;
+    int index= codes.indexOf(codeStr);
+    if(index<0)
+        continue;
+    int cell=i/8-1;
+    if(cell<10){
+      iStr.setNum(cell);
+      iStr="0"+iStr;
+    }  else
+      iStr.setNum(cell);
+    nameStr="balanceSwitch"+iStr;
+    shortNames[index]=nameStr;
+  }
+
+  inFile.close();
+
+}
+
+
 
 QString MainWindow::processLine(QString line_, double iniSecs_){
   /* Questa funzione analizza la riga in ingresso, letta dall'output dello Yokogawa
