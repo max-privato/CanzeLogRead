@@ -119,7 +119,7 @@ void MainWindow::dropEvent(QDropEvent *event)
 
 void MainWindow::on_okButton_clicked(){
   QStringList  inLines, outLines; //stringhe contenenti le righe del file di ingresso e di uscita
-  QFile inFile(inFileName);
+  QFile inFile(inFileName.remove(0,1));
   QByteArray line;
   lineCount=0;
 
