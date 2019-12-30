@@ -28,14 +28,13 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event){
                                 // puts the pointer in the accept position
 }
 
-void MainWindow::dropEvent(QDropEvent *event)
-{
+void MainWindow::dropEvent(QDropEvent *event){
   /* Function for loading dropped files.
    * Dropped log files are:
    * - first searched to find all the available codes
-   * - then it is checked whether the We have short names for some of the codes via ShortName.txt
-   * - then the tree is created allowingusers to select all or just some of the existing namest
-   *   to be converted and saved in individual files
+   * - then it is checked whether we have short names for some of the codes via ShortName.txt
+   * - then the tree is created allowing users to select all or just some of the existing
+   *   names to be converted and saved in individual files
    *
    * the user can drop also the "shortNames.txt" file: this will override the one read
    * when reading the lof file or, in case the latter was not there, is however used to
@@ -106,7 +105,7 @@ void MainWindow::dropEvent(QDropEvent *event)
     list.append(codes[i]);
     list.append(shortNames[i]);
     list.append(longNames[i]);
-    treeItems.append(new QTreeWidgetItem((QTreeWidget*)0,list));
+    treeItems.append(new QTreeWidgetItem((QTreeWidget*)nullptr,list));
     treeItems[treeItems.count()-1]->setCheckState(0,Qt::Checked);
   }
 
@@ -204,7 +203,10 @@ void MainWindow::on_okButton_clicked(){
   for (int i=0; i<treeItems.count(); i++){
     if(treeItems[i]->checkState(0)){
       outStreams[currentField]<<header1<<"  Long name: \""<<longNames[i]<<"\""<<"\n";
-      outStreams[currentField]<<"t\t"<<treeItems[i]->text(1)<<"\n";
+      if(longNames[i]=="GPS")
+          outStreams[currentField]<<"t\t" "latitude longitude elevation\n";
+      else
+         outStreams[currentField]<<"t\t"<<treeItems[i]->text(1)<<"\n";
       currentField++;
     }
   }
@@ -352,7 +354,7 @@ void MainWindow:: loadFileAndFillLists(QString inFileName_){
 
 
 QString MainWindow::processLine(QString line_, double iniSecs_){
-  /* Questa funzione analizza la riga in ingresso, letta dall'output dello Yokogawa
+  /* Questa funzione analizza la riga in ingresso, letta dall'output
    * e determina la stringa contenente la corrispondente riga da scrivere poi sul file
    * di uscita.
    * In pratica decodifico la timestamp e il valore numerico.
@@ -378,7 +380,8 @@ QString MainWindow::processLine(QString line_, double iniSecs_){
   //now last comma is just before the value:
   int valueStartPos=line_.lastIndexOf(',')+1;
   sValue=line_.mid(valueStartPos,valueEndPos-valueStartPos);
-
+  //Only in cse of GPS I have some "/", which must be converted into spaces
+  sValue=sValue.replace("/"," ");
   ret.setNum(timeS,'f',3);
   ret+="\t";
   ret+=sValue;
