@@ -25,6 +25,8 @@ private slots:
     void on_selectBtn_clicked();
     void on_unselectBtn_clicked();
 
+    void on_okButton_pressed();
+
 private:
     bool logFileLoaded;
     int lineCount;

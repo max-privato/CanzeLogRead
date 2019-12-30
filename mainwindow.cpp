@@ -32,11 +32,12 @@ void MainWindow::dropEvent(QDropEvent *event){
   /* Function for loading dropped files.
    * Dropped log files are:
    * - first searched to find all the available codes
-   * - then it is checked whether we have short names for some of the codes via ShortName.txt
+   * - then it is checked whether we have short names for some of the codes via
+   *   ShortNames.txt
    * - then the tree is created allowing users to select all or just some of the existing
-   *   names to be converted and saved in individual files
+   *   names to be converted and saved to individual files
    *
-   * the user can drop also the "shortNames.txt" file: this will override the one read
+   * the user can drop also the "ShortNames.txt" file: this will override the one read
    * when reading the lof file or, in case the latter was not there, is however used to
    * choose short names.
 */
@@ -61,12 +62,11 @@ void MainWindow::dropEvent(QDropEvent *event){
       return;
   }else{
     shortNamesNowDropped=false;
-    inFileName=mimeData->urls().at(0).path();  //short names file name
+    inFileName=mimeData->urls().at(0).path().remove(0,1);  //short names file name
     loadFileAndFillLists(inFileName);
     snFileName=inFileName;
     snFileName.chop(snFileName.count()-snFileName.lastIndexOf('/')-1);
     snFileName=snFileName+"ShortNames.txt";
-    snFileName=snFileName.remove(0,1);
     logFileLoaded=true;
   }
 
@@ -93,7 +93,8 @@ void MainWindow::dropEvent(QDropEvent *event){
         shortNames[index]=shortName;
       iRow++;
     }
-    ui->shortNamesLbl->setText("File ShortNames.txt read");
+    if(!shortNamesNowDropped)
+      ui->shortNamesLbl->setText("File ShortNames.txt read");
   }
   snFile.close();
 
@@ -118,10 +119,9 @@ void MainWindow::dropEvent(QDropEvent *event){
 
 void MainWindow::on_okButton_clicked(){
   QStringList  inLines, outLines; //stringhe contenenti le righe del file di ingresso e di uscita
-  QFile inFile(inFileName.remove(0,1));
+  QFile inFile(inFileName);
   QByteArray line;
   lineCount=0;
-
   if (!inFile.open(QIODevice::ReadOnly | QIODevice::Text)){
      ui->okLabel->setText("Unable to open file for reading!");
      return;
@@ -227,6 +227,7 @@ void MainWindow::on_okButton_clicked(){
     }
     currentField++;
   }
+  inFile.close();
   for(int i=0; i<checkedFiles; i++){
     outFiles[i].close();
   }
@@ -237,7 +238,7 @@ void MainWindow::on_okButton_clicked(){
 
 
 void MainWindow:: loadFileAndFillLists(QString inFileName_){
-  inFileName_.remove(0,1);
+//  inFileName_.remove(0,1);
   ui->label_4->setText(inFileName_);
   ui->okLabel->setText(initialLabel3Text);
   ui->okLabel->setEnabled(true);
@@ -396,4 +397,9 @@ void MainWindow::on_selectBtn_clicked() {
 void MainWindow::on_unselectBtn_clicked() {
     for(int i=0; i<treeItems.count(); i++)
       treeItems[i]->setCheckState(0,Qt::Unchecked);
+}
+
+void MainWindow::on_okButton_pressed()
+{
+  ui->okLabel->setText("Ok down...                  ");
 }
