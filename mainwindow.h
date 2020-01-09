@@ -40,6 +40,7 @@ private:
     //pari a quelli di input -2 in quanto gli ultimi 2 non li riporto
     Ui::MainWindow *ui;
     void loadFileAndFillLists(QString inFileName_);
+    void processDroppedFile(QString droppedName);
     QString processLine(QString line_, double iniSecs_);
     void updateClickedState();
 
