@@ -2,6 +2,8 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x050F00
+
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use

@@ -126,10 +126,11 @@ void MainWindow:: loadFileAndFillLists(QString inFileName_){
     if(cell<10){
       iStr.setNum(cell);
       iStr="0"+iStr;
-    }  else
-     iStr.setNum(cell);
-     nameStr="tempCell"+iStr;
-     shortNames[index]=nameStr;
+    }
+    else
+      iStr.setNum(cell);
+    nameStr="tempCell"+iStr;
+    shortNames[index]=nameStr;
   }
 
   // cell Balancing Switches::
@@ -183,7 +184,7 @@ void MainWindow::on_okButton_clicked(){
     fileName=fileName+"_"+treeItems[i]->text(1)+".ADF";
     outFileNames.append(fileName);
     int pos=fileName.lastIndexOf('/');
-    QString shortName=fileName.mid(pos+1,fileName.count()-pos);
+    QString shortName=fileName.mid(pos+1,fileName.size()-pos);
     shortOutFNames.append(shortName);
   }
 
@@ -284,7 +285,7 @@ void MainWindow::processDroppedFile(QString droppedName){
    *   names to be converted and saved to individual files
    *
    * the user can drop also the "ShortNames.txt" file: this will override the one read
-   * when reading the lof file or, in case the latter was not there, is however used to
+   * when reading the log file or, in case the latter was not there, is however used to
    * choose short names.
    */
 
@@ -296,7 +297,7 @@ void MainWindow::processDroppedFile(QString droppedName){
   //We must first see if the dropped file is ShortNames.txt or not (in the latter case it is a log file)
 
   int i=droppedName.lastIndexOf('/')+1;
-  QString shortedName=droppedName.mid(i,droppedName.count()-i);
+  QString shortedName=droppedName.mid(i,droppedName.size()-i);
 
   if(shortedName=="ShortNames.txt"){
     if(logFileLoaded){
@@ -310,7 +311,7 @@ void MainWindow::processDroppedFile(QString droppedName){
     inFileName=droppedName.remove(0,1);  //short names file name
     loadFileAndFillLists(inFileName);
     snFileName=inFileName;
-    snFileName.chop(snFileName.count()-snFileName.lastIndexOf('/')-1);
+    snFileName.chop(snFileName.size()-snFileName.lastIndexOf('/')-1);
     snFileName=snFileName+"ShortNames.txt";
     logFileLoaded=true;
   }
@@ -332,7 +333,7 @@ void MainWindow::processDroppedFile(QString droppedName){
       QString code=line;
       code.truncate(line.indexOf(' '));
       QString shortName=line;
-      shortName=shortName.mid(line.indexOf(' '),line.count()-line.indexOf(' ')-1);
+      shortName=shortName.mid(line.indexOf(' '),line.size()-line.indexOf(' ')-1);
       int index=codes.indexOf(code);
       if(index>-1)
         shortNames[index]=shortName;
